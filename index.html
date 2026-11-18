@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LexiForge — 受験英語を「構造と音」で攻略するインタラクティブ学習スタジオ</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #090D16;
+      --bg-surface: rgba(17, 24, 39, 0.84);
+      --bg-elevated: rgba(30, 41, 59, 0.78);
+      --border-subtle: rgba(148, 163, 184, 0.16);
+    }
+    body {
+      background-color: var(--bg-base);
+      color: #F8FAFC;
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      background-image:
+        radial-gradient(ellipse 65% 45% at 15% 0%, rgba(56, 189, 248, 0.14), transparent 60%),
+        radial-gradient(ellipse 55% 40% at 85% 5%, rgba(168, 85, 247, 0.12), transparent 60%),
+        radial-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 26px 26px;
+      overflow-x: hidden;
+    }
+    .glass {
+      background: var(--bg-surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.4);
+    }
+    .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+    .svoc-S { background: rgba(56, 189, 248, 0.16); border-bottom: 2px solid #38BDF8; color: #BAE6FD; }
+    .svoc-V { background: rgba(244, 63, 94, 0.16); border-bottom: 2px solid #F43F5E; color: #FECDD3; }
+    .svoc-O { background: rgba(52, 211, 153, 0.16); border-bottom: 2px solid #34D399; color: #A7F3D0; }
+    .svoc-C { background: rgba(251, 191, 36, 0.16); border-bottom: 2px solid #FBBF24; color: #FDE68A; }
+    .svoc-M { background: rgba(168, 85, 247, 0.16); border-bottom: 2px solid #A855F7; color: #E9D5FF; }
+
+    @keyframes pop {
+      0% { transform: scale(0.95); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    .animate-pop { animation: pop 0.2s ease-out; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .animate-shake { animation: shake 0.18s ease-in-out; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation & Status Bar -->
+  <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-[#090D16]/90 backdrop-blur-xl">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 via-indigo-500 to-purple-500 flex items-center justify-center text-white font-extrabold text-sm shadow-lg shadow-sky-500/20 shrink-0">LF</div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="font-bold tracking-tight text-base sm:text-lg truncate">LexiForge</span>
+            <span id="course-badge" class="hidden sm:inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">大学受験</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Tabs -->
+      <nav class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <button id="tab-home" type="button" class="nav-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-sky-500 text-slate-950 transition">ホーム</button>
+        <button id="tab-train" type="button" class="nav-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition">トレーニング</button>
+        <button id="tab-reading" type="button" class="nav-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition">長文・構造</button>
+        <button id="tab-srs" type="button" class="nav-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition">弱点復習 <span id="srs-badge" class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300">0</span></button>
+      </nav>
+
+      <!-- Gamification Status -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+          <span class="text-amber-400 font-bold" id="streak-val">1日連続</span>
+          <span class="text-slate-600">|</span>
+          <span class="text-sky-300 font-mono-code font-semibold" id="xp-val">0 XP</span>
+        </div>
+        <button id="btn-sound" type="button" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900/90 border border-slate-800 text-sky-300 hover:border-sky-500/50 transition">音: ON</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-2.5 rounded-xl bg-sky-500 text-slate-950 font-bold text-sm shadow-xl"></div>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
+
+    <!-- ==================== VIEW 1: HOME & COURSE SELECT ==================== -->
+    <section id="view-home" class="space-y-6">
+      <!-- Hero Banner: Course Selector & Daily Quests -->
+      <div class="glass rounded-3xl p-6 sm:p-8 grid lg:grid-cols-12 gap-6 items-center">
+        <div class="lg:col-span-7 space-y-4">
+          <div class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+            受験対応：語順構造 × 音声 × 忘却曲線SRS
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-snug">
+            英語を「暗記の苦行」から、<br class="hidden sm:inline" />構造がパズルのように解ける快感へ。
+          </h1>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            目標の試験コースを選ぶと、出題される単語・英文法・整序パズル・長文スラッシュ読解がすべて最適化されます。1日3つのデイリークエストを達成して合格への連続記録を伸ばしましょう。
+          </p>
+
+          <!-- Target Exam Course Buttons -->
+          <div class="pt-2">
+            <div class="text-xs font-semibold text-slate-400 mb-2">ターゲット試験を選択（クリックで即切替）：</div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-course="hs" class="course-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-slate-700 bg-slate-800/70 text-slate-200 hover:border-sky-400 transition">高校受験（基礎〜公立・難関）</button>
+              <button type="button" data-course="univ" class="course-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-sky-400 bg-sky-500/20 text-sky-200 shadow-sm transition">大学受験（共通テスト〜難関私大・国公立）</button>
+              <button type="button" data-course="eiken" class="course-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-slate-700 bg-slate-800/70 text-slate-200 hover:border-sky-400 transition">英検対策（2級・準1級レベル）</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily Quests & Pomodoro Focus Widget -->
+        <div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-slate-100">本日のデイリークエスト</h2>
+            <span id="quest-progress-label" class="text-xs font-mono-code text-sky-400">0 / 3 完了</span>
+          </div>
+          <div id="daily-quests-list" class="space-y-2.5 text-xs"></div>
+
+          <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+            <div>
+              <div class="text-[11px] text-slate-400">集中スプリントタイマー</div>
+              <div id="timer-display" class="text-lg font-bold font-mono-code text-emerald-400">03:00</div>
+            </div>
+            <div class="flex gap-1.5">
+              <button id="btn-timer-toggle" type="button" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold hover:bg-emerald-500/30 transition">開始</button>
+              <button id="btn-timer-reset" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs hover:text-white transition">リセット</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Interactive Training Modes Launcher -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <button type="button" data-launch="syntax" class="launch-card text-left glass rounded-2xl p-5 hover:border-sky-400/60 transition group">
+          <div class="text-xs font-mono-code text-sky-400 mb-2">MODE 01 / 語順パズル</div>
+          <h3 class="text-base font-bold group-hover:text-sky-300 transition">Syntax Forge（整序英作文）</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">英語の語順感覚（SVOC）をブロック組み立てで体得。受験の並べ替え問題を完全攻略。</p>
+        </button>
+
+        <button type="button" data-launch="vocab" class="launch-card text-left glass rounded-2xl p-5 hover:border-purple-400/60 transition group">
+          <div class="text-xs font-mono-code text-purple-400 mb-2">MODE 02 / 文脈語彙・言い換え</div>
+          <h3 class="text-base font-bold group-hover:text-purple-300 transition">Context Cloze（文脈穴埋め）</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">単語単体ではなく「生きた英文の文脈」から最重要語彙・熟語・言い換えを見抜く。</p>
+        </button>
+
+        <button type="button" data-launch="dictation" class="launch-card text-left glass rounded-2xl p-5 hover:border-emerald-400/60 transition group">
+          <div class="text-xs font-mono-code text-emerald-400 mb-2">MODE 03 / 聴覚・瞬間入力</div>
+          <h3 class="text-base font-bold group-hover:text-emerald-300 transition">Echo Dictation（音声入力）</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">ネイティブ音声を聴いてキーワードをタイピング入力。リスニングとスペルを同時強化。</p>
+        </button>
+
+        <button type="button" data-launch="reading" class="launch-card text-left glass rounded-2xl p-5 hover:border-amber-400/60 transition group">
+          <div class="text-xs font-mono-code text-amber-400 mb-2">MODE 04 / 構造スラッシュ読解</div>
+          <h3 class="text-base font-bold group-hover:text-amber-300 transition">SVOC Chunk Reader（長文）</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">長文をS・V・O・C・Mにリアルタイム色分け分解し、返り読みゼロの速読力を養成。</p>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: INTERACTIVE TRAINING ==================== -->
+    <section id="view-train" class="hidden space-y-5">
+      <!-- Mode & Status Bar -->
+      <div class="glass rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" data-mode="syntax" class="mode-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40">語順パズル</button>
+          <button type="button" data-mode="vocab" class="mode-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700">文脈穴埋め</button>
+          <button type="button" data-mode="dictation" class="mode-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700">音声ディクテーション</button>
+        </div>
+
+        <div class="flex items-center gap-3 text-xs">
+          <span class="text-slate-400">コンボ: <strong id="train-combo" class="text-amber-400 font-mono-code text-sm">0</strong></span>
+          <span class="text-slate-400">進捗: <strong id="train-progress" class="text-slate-200 font-mono-code">1 / 4</strong></span>
+          <button id="btn-speak-question" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold hover:bg-indigo-500/30 transition">音声を聴く</button>
+        </div>
+      </div>
+
+      <!-- Training Card -->
+      <div id="train-card" class="glass rounded-3xl p-6 sm:p-8 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span id="q-tag" class="text-xs font-mono-code px-2.5 py-1 rounded-lg bg-slate-800 text-sky-300 border border-slate-700">文法・語順</span>
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <label for="speech-rate">再生速度:</label>
+            <select id="speech-rate" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200">
+              <option value="0.8">0.8x（ゆっくり）</option>
+              <option value="1.0" selected>1.0x（標準）</option>
+              <option value="1.2">1.2x（速聴）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Question Prompt -->
+        <div class="space-y-2">
+          <div id="q-japanese" class="text-lg sm:text-xl font-bold text-slate-100 leading-relaxed"></div>
+          <div id="q-english-context" class="text-base sm:text-lg text-slate-200 leading-relaxed bg-slate-900/70 border border-slate-800 rounded-2xl p-4 hidden"></div>
+        </div>
+
+        <!-- Interactive Area (varies by mode) -->
+        <div id="interactive-zone" class="space-y-4"></div>
+
+        <!-- Feedback & Deep Explanation Box -->
+        <div id="feedback-box" class="hidden rounded-2xl p-4 sm:p-5 border space-y-2">
+          <div id="feedback-title" class="font-bold text-sm"></div>
+          <div id="feedback-detail" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></div>
+          <div class="pt-2">
+            <button id="btn-next-question" type="button" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs sm:text-sm transition">次の問題へ進む →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: SVOC CHUNK READER ==================== -->
+    <section id="view-reading" class="hidden space-y-5">
+      <div class="glass rounded-3xl p-6 sm:p-8 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-bold">SVOC 構造スラッシュ・リーダー</h2>
+            <p class="text-xs text-slate-400 mt-1">英文の役割（S主語 / V動詞 / O目的語 / C補語 / M修飾）を色分けし、英語の語順のまま意味を掴むトレーニングです。</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btn-toggle-svoc" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40">SVOC色分け: ON</button>
+            <button id="btn-toggle-chunk-jp" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700">チャンク訳: ON</button>
+            <button id="btn-speak-passage" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">全文を音声再生</button>
+          </div>
+        </div>
+
+        <!-- SVOC Legend -->
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="px-2 py-0.5 rounded svoc-S font-mono-code">S 主語</span>
+          <span class="px-2 py-0.5 rounded svoc-V font-mono-code">V 動詞</span>
+          <span class="px-2 py-0.5 rounded svoc-O font-mono-code">O 目的語</span>
+          <span class="px-2 py-0.5 rounded svoc-C font-mono-code">C 補語</span>
+          <span class="px-2 py-0.5 rounded svoc-M font-mono-code">M 修飾・接続</span>
+        </div>
+
+        <!-- Passage Selector -->
+        <div id="passage-selector" class="flex flex-wrap gap-2"></div>
+
+        <!-- Interactive Passage Body -->
+        <div id="passage-body" class="space-y-4 bg-slate-900/75 border border-slate-800 rounded-2xl p-5 sm:p-6"></div>
+
+        <!-- Comprehension Check -->
+        <div id="passage-quiz" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: SRS WEAKNESS REVIEW ==================== -->
+    <section id="view-srs" class="hidden space-y-5">
+      <div class="glass rounded-3xl p-6 sm:p-8 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold">忘却曲線（SRS）弱点レスキュー</h2>
+            <p class="text-xs text-slate-400 mt-1">トレーニングで間違えた問題が自動的にストックされます。記憶が薄れる前に復習して「定着済み」へ変えましょう。</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-start-srs-drill" type="button" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs sm:text-sm transition">ストック問題を復習する</button>
+            <button id="btn-clear-srs" type="button" class="px-3 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs border border-slate-700 hover:text-white">履歴クリア</button>
+          </div>
+        </div>
+
+        <div id="srs-list" class="space-y-3"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. CURRICULUM DATABASE (High School / University / Eiken)
+    // =========================================================================
+    const COURSES = {
+  "hs": {
+    "name": "高校受験",
+    "syntax": [
+      {
+        "tag": "高校受験・形式主語 (It ... for ... to)",
+        "jp": "私たちが毎日英語を話すことは大切です。",
+        "chunks": [
+          "It",
+          "is",
+          "important",
+          "for us",
+          "to speak",
+          "English",
+          "every day."
+        ],
+        "note": "「It is 形容詞 for 人 to 動詞」の形式主語構文は公立・私立ともに最頻出。"
+      },
+      {
+        "tag": "高校受験・関係代名詞 (目的格)",
+        "jp": "これは私が昨日図書館で借りた本です。",
+        "chunks": [
+          "This is",
+          "the book",
+          "that",
+          "I borrowed",
+          "at the library",
+          "yesterday."
+        ],
+        "note": "先行詞 the book を後ろから関係代名詞節 (that I borrowed...) が修飾する英語の語順に慣れよう。"
+      },
+      {
+        "tag": "高校受験・受動態",
+        "jp": "この歌は世界中の多くの人々に愛されています。",
+        "chunks": [
+          "This song",
+          "is loved",
+          "by many people",
+          "all over",
+          "the world."
+        ],
+        "note": "be動詞 + 過去分詞 (is loved) で「〜される」。by 以下は行為者を表す塊。"
+      },
+      {
+        "tag": "高校受験・現在完了 (継続)",
+        "jp": "私は5年間ずっとこの町に住んでいます。",
+        "chunks": [
+          "I have",
+          "lived",
+          "in this town",
+          "for",
+          "five years."
+        ],
+        "note": "現在完了の継続用法。期間を表す for five years とセットで覚えるのが定番。"
+      },
+      {
+        "tag": "高校受験・比較 (最上級)",
+        "jp": "富士山は日本で一番高い山です。",
+        "chunks": [
+          "Mt. Fuji",
+          "is",
+          "the highest",
+          "mountain",
+          "in Japan."
+        ],
+        "note": "the + 最上級 + 名詞 + in 場所（範囲）。複数年や国・場所には in、複数名詞には of を使う。"
+      },
+      {
+        "tag": "高校受験・tell 人 to do",
+        "jp": "母は私に部屋を掃除するように言った。",
+        "chunks": [
+          "My mother",
+          "told",
+          "me",
+          "to clean",
+          "my room."
+        ],
+        "note": "tell + 人 + to 動詞の原形（人に〜するよう言う）。want 人 to do / ask 人 to do も同じ語順。"
+      },
+      {
+        "tag": "高校受験・間接疑問文",
+        "jp": "彼がどこへ行ったか知っていますか。",
+        "chunks": [
+          "Do you know",
+          "where",
+          "he",
+          "went",
+          "yesterday?"
+        ],
+        "note": "間接疑問文は「疑問詞 + 主語 + 動詞」の平叙文の語順に戻る点が最大の狙われどころ。"
+      },
+      {
+        "tag": "高校受験・現在分詞の後置修飾",
+        "jp": "あそこで走っている少年は私の弟です。",
+        "chunks": [
+          "The boy",
+          "running",
+          "over there",
+          "is",
+          "my brother."
+        ],
+        "note": "2語以上の分詞の塊（running over there）は名詞の後ろから修飾する。"
+      },
+      {
+        "tag": "高校受験・感嘆文 (How / What)",
+        "jp": "この花はなんて美しいのでしょう。",
+        "chunks": [
+          "How",
+          "beautiful",
+          "this flower",
+          "is!"
+        ],
+        "note": "How + 形容詞/副詞 + S + V! と What + (a/an) + 形容詞 + 名詞 + S + V! の使い分けに注意。"
+      },
+      {
+        "tag": "高校受験・接続詞 if (条件)",
+        "jp": "もし明日晴れたら、私たちは公園へ行くつもりです。",
+        "chunks": [
+          "If",
+          "it is",
+          "sunny tomorrow,",
+          "we will",
+          "go to",
+          "the park."
+        ],
+        "note": "時・条件の副詞節（If の中）では未来のことでも現在形（is）を使う重要ルール。"
+      }
+    ],
+    "vocab": [
+      {
+        "tag": "高校受験・重要熟語",
+        "sentence": "I am looking [ ___ ] to seeing you next week.",
+        "jp": "来週あなたに会えるのを楽しみにしています。",
+        "options": [
+          "forward",
+          "up",
+          "after",
+          "around"
+        ],
+        "answer": "forward",
+        "note": "look forward to ~ing（〜するのを楽しみに待つ）。後ろの to は前置詞なので必ず動名詞が来る！"
+      },
+      {
+        "tag": "高校受験・接続詞",
+        "sentence": "[ ___ ] it was raining, we enjoyed the soccer game.",
+        "jp": "雨が降っていたけれども、私たちはサッカーの試合を楽しんだ。",
+        "options": [
+          "Although",
+          "Because",
+          "During",
+          "Unless"
+        ],
+        "answer": "Although",
+        "note": "Although S V（SがVするけれども）。During は前置詞で後ろに SV を置けない点も入試の定番。"
+      },
+      {
+        "tag": "高校受験・重要熟語",
+        "sentence": "Please [ ___ ] care of my dog while I am away.",
+        "jp": "私が留守の間、犬の世話をしてください。",
+        "options": [
+          "take",
+          "make",
+          "give",
+          "have"
+        ],
+        "answer": "take",
+        "note": "take care of 〜（〜の世話をする）＝ look after 〜。書き換え問題でも頻出です。"
+      },
+      {
+        "tag": "高校受験・助動詞",
+        "sentence": "You [ ___ ] not cross the street when the light is red.",
+        "jp": "信号が赤のときは道路を渡ってはいけません。",
+        "options": [
+          "must",
+          "need",
+          "may",
+          "could"
+        ],
+        "answer": "must",
+        "note": "must not 〜（〜してはいけない：禁止）。don't have to（〜しなくてよい：不必要）との違いに注意。"
+      },
+      {
+        "tag": "高校受験・前置詞",
+        "sentence": "This desk is made [ ___ ] wood.",
+        "jp": "この机は木でできています。",
+        "options": [
+          "of",
+          "from",
+          "into",
+          "with"
+        ],
+        "answer": "of",
+        "note": "材料がそのまま見えるときは be made of、見た目から材料が変わる（ワインとぶどう等）は be made from。"
+      },
+      {
+        "tag": "高校受験・不定詞/動名詞",
+        "sentence": "She finished [ ___ ] her homework before dinner.",
+        "jp": "彼女は夕食前に宿題を終えました。",
+        "options": [
+          "doing",
+          "to do",
+          "do",
+          "did"
+        ],
+        "answer": "doing",
+        "note": "finish, enjoy, stop(〜するのをやめる) は後ろに必ず動名詞（~ing）をとる動詞（MEGAFEPS）。"
+      },
+      {
+        "tag": "高校受験・比較",
+        "sentence": "This book is [ ___ ] more interesting than that one.",
+        "jp": "この本はあの本よりずっとおもしろい。",
+        "options": [
+          "much",
+          "very",
+          "more",
+          "many"
+        ],
+        "answer": "much",
+        "note": "比較級を強める「ずっと」は much / a lot / far。very は原級にしか使えないのが定番ひっかけ。"
+      },
+      {
+        "tag": "高校受験・熟語",
+        "sentence": "Ken is interested [ ___ ] Japanese history.",
+        "jp": "健は日本の歴史に興味があります。",
+        "options": [
+          "in",
+          "at",
+          "on",
+          "for"
+        ],
+        "answer": "in",
+        "note": "be interested in 〜（〜に興味がある）。受動態でも by 以外の前置詞を使う重要表現。"
+      },
+      {
+        "tag": "高校受験・不定代名詞",
+        "sentence": "Some students like math, and [ ___ ] like English.",
+        "jp": "数学が好きな生徒もいれば、英語が好きな生徒もいる。",
+        "options": [
+          "others",
+          "another",
+          "the other",
+          "other"
+        ],
+        "answer": "others",
+        "note": "Some ~, and others ...（〜な人もいれば、…な人もいる）。特定しない複数は others。"
+      },
+      {
+        "tag": "高校受験・疑問詞 + to do",
+        "sentence": "I don't know [ ___ ] to use this machine.",
+        "jp": "この機械の使い方がわかりません。",
+        "options": [
+          "how",
+          "what",
+          "who",
+          "where"
+        ],
+        "answer": "how",
+        "note": "how to 動詞の原形（〜の仕方・方法）。what to do（何をすべきか）と並んで頻出。"
+      }
+    ],
+    "dictation": [
+      {
+        "tag": "高校受験・道案内",
+        "sentence": "Could you tell me the way to the station?",
+        "blankWord": "station",
+        "masked": "Could you tell me the way to the [ _______ ]?",
+        "jp": "駅への道を教えていただけますか？",
+        "note": "the way to 〜（〜への道）はリスニング・会話文の超定番フレーズ。"
+      },
+      {
+        "tag": "高校受験・天気と予定",
+        "sentence": "If it is sunny tomorrow, we will go hiking.",
+        "blankWord": "tomorrow",
+        "masked": "If it is sunny [ ________ ], we will go hiking.",
+        "jp": "もし明日晴れたら、私たちはハイキングに行きます。",
+        "note": "tomorrow の綴り（mが1つ、rが2つ）は英作文でもよく間違えられます。"
+      },
+      {
+        "tag": "高校受験・電話/依頼",
+        "sentence": "Would you mind opening the window?",
+        "blankWord": "opening",
+        "masked": "Would you mind [ _______ ] the window?",
+        "jp": "窓を開けていただけますか？",
+        "note": "Would you mind ~ing?（〜していただけますか）。承諾するときは No, not at all. と答えるのがポイント。"
+      },
+      {
+        "tag": "高校受験・経験",
+        "sentence": "Have you ever visited Kyoto before?",
+        "blankWord": "visited",
+        "masked": "Have you ever [ _______ ] Kyoto before?",
+        "jp": "これまでに京都を訪れたことがありますか？",
+        "note": "Have you ever + 過去分詞?（今までに〜したことがありますか）。"
+      },
+      {
+        "tag": "高校受験・提案",
+        "sentence": "Why don't we take a break for ten minutes?",
+        "blankWord": "minutes",
+        "masked": "Why don't we take a break for ten [ _______ ]?",
+        "jp": "10分間休憩しませんか？",
+        "note": "Why don't we ~? ＝ Shall we ~? ＝ Let's ~. 提案表現の書き換え定番。"
+      },
+      {
+        "tag": "高校受験・学校生活",
+        "sentence": "I have to practice the piano every afternoon.",
+        "blankWord": "practice",
+        "masked": "I have to [ ________ ] the piano every afternoon.",
+        "jp": "私は毎日午後にピアノを練習しなければなりません。",
+        "note": "practice は動名詞を目的語にとる動詞としても頻出です。"
+      },
+      {
+        "tag": "高校受験・買い物",
+        "sentence": "How much does this jacket cost?",
+        "blankWord": "jacket",
+        "masked": "How much does this [ ______ ] cost?",
+        "jp": "このジャケットはいくらですか？",
+        "note": "値段を尋ねる How much does ~ cost? の語順を確認しよう。"
+      },
+      {
+        "tag": "高校受験・約束",
+        "sentence": "Don't forget to bring your dictionary tomorrow.",
+        "blankWord": "dictionary",
+        "masked": "Don't forget to bring your [ __________ ] tomorrow.",
+        "jp": "明日辞書を持ってくるのを忘れないでね。",
+        "note": "forget to do（これから〜するのを忘れる）と forget ~ing（過去に〜したことを忘れる）の区別も大切。"
+      }
+    ],
+    "passages": [
+      {
+        "title": "AI時代における「自分で考える力」（高校長文）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Today,",
+                "role": "M",
+                "jp": "今日では"
+              },
+              {
+                "text": "many students",
+                "role": "S",
+                "jp": "多くの生徒が"
+              },
+              {
+                "text": "use",
+                "role": "V",
+                "jp": "使っている"
+              },
+              {
+                "text": "digital tools",
+                "role": "O",
+                "jp": "デジタルツールを"
+              },
+              {
+                "text": "to study faster.",
+                "role": "M",
+                "jp": "より速く学ぶために"
+              }
+            ]
+          },
+          {
+            "chunks": [
+              {
+                "text": "However,",
+                "role": "M",
+                "jp": "しかしながら"
+              },
+              {
+                "text": "thinking by yourself",
+                "role": "S",
+                "jp": "自分で考えることは"
+              },
+              {
+                "text": "remains",
+                "role": "V",
+                "jp": "〜のままである"
+              },
+              {
+                "text": "the most important skill.",
+                "role": "C",
+                "jp": "最も重要なスキル"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "筆者が「最も重要なスキル」として残ると述べているものはどれか？",
+          "options": [
+            "デジタルツールを速く操作すること",
+            "自分で考えること",
+            "多くの生徒と協力すること"
+          ],
+          "answer": "自分で考えること"
+        }
+      },
+      {
+        "title": "地域のボランティア活動と交流（高校長文）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Last Sunday,",
+                "role": "M",
+                "jp": "先週の日曜日"
+              },
+              {
+                "text": "our class",
+                "role": "S",
+                "jp": "私たちのクラスは"
+              },
+              {
+                "text": "cleaned",
+                "role": "V",
+                "jp": "掃除した"
+              },
+              {
+                "text": "the city park",
+                "role": "O",
+                "jp": "市民公園を"
+              },
+              {
+                "text": "with local people.",
+                "role": "M",
+                "jp": "地域の人々と一緒に"
+              }
+            ]
+          },
+          {
+            "chunks": [
+              {
+                "text": "Working together",
+                "role": "S",
+                "jp": "一緒に働くことは"
+              },
+              {
+                "text": "made",
+                "role": "V",
+                "jp": "〜にした"
+              },
+              {
+                "text": "everyone",
+                "role": "O",
+                "jp": "みんなを"
+              },
+              {
+                "text": "very happy.",
+                "role": "C",
+                "jp": "とても幸せに"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "第5文型「made everyone very happy」の意味として正しいのは？",
+          "options": [
+            "みんなをとても幸せにした",
+            "みんなに幸せを作ってもらった",
+            "みんなが幸せを求めた"
+          ],
+          "answer": "みんなをとても幸せにした"
+        }
+      },
+      {
+        "title": "睡眠と学習効率の関係（高校長文）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Getting enough sleep",
+                "role": "S",
+                "jp": "十分な睡眠をとることは"
+              },
+              {
+                "text": "helps",
+                "role": "V",
+                "jp": "助ける"
+              },
+              {
+                "text": "your brain",
+                "role": "O",
+                "jp": "あなたの脳が"
+              },
+              {
+                "text": "remember new words.",
+                "role": "C",
+                "jp": "新しい単語を覚えるのを"
+              }
+            ]
+          },
+          {
+            "chunks": [
+              {
+                "text": "Therefore,",
+                "role": "M",
+                "jp": "したがって"
+              },
+              {
+                "text": "you",
+                "role": "S",
+                "jp": "あなたは"
+              },
+              {
+                "text": "should not stay up late",
+                "role": "V",
+                "jp": "夜更かしすべきではない"
+              },
+              {
+                "text": "before a big test.",
+                "role": "M",
+                "jp": "大きなテストの前に"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "大きなテストの前に筆者が避けるべきだと言っていることは？",
+          "options": [
+            "新しい単語を覚えること",
+            "夜更かしをすること",
+            "十分な睡眠をとること"
+          ],
+          "answer": "夜更かしをすること"
+        }
+      }
+    ]
+  },
+  "univ": {
+    "name": "大学受験",
+    "syntax": [
+      {
+        "tag": "大学受験・分詞構文",
+        "jp": "そのニュースを聞いて、彼女は驚きを隠せなかった。",
+        "chunks": [
+          "Hearing",
+          "the news,",
+          "she",
+          "could not",
+          "hide",
+          "her surprise."
+        ],
+        "note": "分詞構文 Hearing the news は「そのニュースを聞いたとき（When she heard...）」を簡潔に表す。"
+      },
+      {
+        "tag": "大学受験・無生物主語 + enable",
+        "jp": "この新しい技術によって、私たちは遠く離れた人と話せるようになる。",
+        "chunks": [
+          "This new technology",
+          "enables",
+          "us",
+          "to talk with",
+          "people",
+          "far away."
+        ],
+        "note": "「無生物主語 + enable + O + to do（SのおかげでOが〜できる）」は和訳・英作文で差がつく定番構文。"
+      },
+      {
+        "tag": "大学受験・仮定法過去完了",
+        "jp": "もし彼の助言に従っていたら、その失敗を避けられただろうに。",
+        "chunks": [
+          "If I had",
+          "followed",
+          "his advice,",
+          "I could have",
+          "avoided",
+          "the mistake."
+        ],
+        "note": "過去の事実に反する仮定。「If S had p.p., S would/could have p.p.」を瞬時に組めるようにしよう。"
+      },
+      {
+        "tag": "大学受験・倒置 (Not until)",
+        "jp": "健康を失って初めて、人はその大切さに気づく。",
+        "chunks": [
+          "Not until",
+          "we lose",
+          "our health",
+          "do we",
+          "realize",
+          "its value."
+        ],
+        "note": "否定語句（Not until ~）が文頭に出ると、主節が疑問文の語順（do we realize）に倒置する！"
+      },
+      {
+        "tag": "大学受験・強調構文",
+        "jp": "私が昨日駅で偶然会ったのは、トムだった。",
+        "chunks": [
+          "It was",
+          "Tom",
+          "that",
+          "I happened",
+          "to meet",
+          "at the station",
+          "yesterday."
+        ],
+        "note": "「It is A that ~」の強調構文。happen to do（偶然〜する）も頻出熟語。"
+      },
+      {
+        "tag": "大学受験・前置詞 + 関係代名詞",
+        "jp": "これが私がその実験を行った理由です。",
+        "chunks": [
+          "This is",
+          "the reason",
+          "for which",
+          "I conducted",
+          "the experiment."
+        ],
+        "note": "前置詞 + 関係代名詞（for which = why）。後ろには完全な文（SVO）が続くのが鉄則。"
+      },
+      {
+        "tag": "大学受験・the 比較級, the 比較級",
+        "jp": "高ければ高いほど、空気はますます薄くなる。",
+        "chunks": [
+          "The higher",
+          "we climb,",
+          "the thinner",
+          "the air",
+          "becomes."
+        ],
+        "note": "「The 比較級 S V, the 比較級 S V（〜すればするほどますます…）」の比例構文。"
+      },
+      {
+        "tag": "大学受験・付帯状況の with",
+        "jp": "彼は目を閉じたまま音楽を聴いていた。",
+        "chunks": [
+          "He was",
+          "listening to",
+          "music",
+          "with",
+          "his eyes",
+          "closed."
+        ],
+        "note": "with + O + C（Oが〜された状態で）。eyes は「閉じられる」側なので過去分詞 closed になる。"
+      },
+      {
+        "tag": "大学受験・no matter how (譲歩)",
+        "jp": "たとえどんなに難しくても、あきらめてはいけない。",
+        "chunks": [
+          "No matter how",
+          "difficult",
+          "it may be,",
+          "you must not",
+          "give up."
+        ],
+        "note": "No matter how + 形容詞/副詞 + S + V ＝ However + 形容詞/副詞 + S + V。語順の引き寄せに注意。"
+      },
+      {
+        "tag": "大学受験・It is no use ~ing",
+        "jp": "終わったことを悔やんでも無駄だ。",
+        "chunks": [
+          "It is",
+          "no use",
+          "crying",
+          "over",
+          "spilt milk."
+        ],
+        "note": "It is no use ~ing（〜しても無駄だ）の慣用表現。不定詞ではなく動名詞を使う。"
+      },
+      {
+        "tag": "大学受験・prevent O from ~ing",
+        "jp": "激しい雨が私たちの出発を妨げた。",
+        "chunks": [
+          "The heavy rain",
+          "prevented",
+          "us",
+          "from",
+          "leaving",
+          "on time."
+        ],
+        "note": "prevent / keep / stop + O + from ~ing（Oが〜するのを妨げる）。無生物主語と相性抜群。"
+      },
+      {
+        "tag": "大学受験・関係代名詞 what",
+        "jp": "今日の私は、彼女のおかげである。",
+        "chunks": [
+          "What",
+          "I am",
+          "today",
+          "is",
+          "due to",
+          "her support."
+        ],
+        "note": "what S + be（現在のS、過去のSなど）は「〜という存在」を表す名詞節を作る定番表現。"
+      }
+    ],
+    "vocab": [
+      {
+        "tag": "大学受験・文脈語彙",
+        "sentence": "Sleep deprivation can [ ___ ] cognitive performance, making it harder to focus.",
+        "jp": "睡眠不足は認知機能を損ない、集中を難しくすることがある。",
+        "options": [
+          "impair",
+          "enhance",
+          "preserve",
+          "allocate"
+        ],
+        "answer": "impair",
+        "note": "impair（損なう・悪化させる）。文末の making it harder to focus というマイナス文脈が根拠。"
+      },
+      {
+        "tag": "大学受験・パラフレーズ",
+        "sentence": "The committee decided to [ ___ ] the outdated policy immediately.",
+        "jp": "委員会はその時代遅れの規定を直ちに廃止することを決定した。",
+        "options": [
+          "abolish",
+          "compile",
+          "emulate",
+          "foster"
+        ],
+        "answer": "abolish",
+        "note": "abolish（制度・法律を廃止する）。outdated（時代遅れの）という文脈と結びつく最頻出動詞。"
+      },
+      {
+        "tag": "大学受験・重要動詞",
+        "sentence": "The witness's statement did not [ ___ ] with the physical evidence.",
+        "jp": "目撃者の証言は物的証拠と一致しなかった。",
+        "options": [
+          "correspond",
+          "contradict",
+          "attribute",
+          "deprive"
+        ],
+        "answer": "correspond",
+        "note": "correspond with 〜（〜と一致する・調和する）。contradict は前置詞なしで「〜と矛盾する」。"
+      },
+      {
+        "tag": "大学受験・文脈形容詞",
+        "sentence": "Clean drinking water is becoming increasingly [ ___ ] in arid regions.",
+        "jp": "乾燥地域では清潔な飲料水がますます乏しくなっている。",
+        "options": [
+          "scarce",
+          "abundant",
+          "trivial",
+          "eloquent"
+        ],
+        "answer": "scarce",
+        "note": "scarce（乏しい・不足している）。abundant（豊富な）の反意語として読解で超重要。"
+      },
+      {
+        "tag": "大学受験・語法 (attribute)",
+        "sentence": "Researchers [ ___ ] the rapid decline in bird populations to habitat loss.",
+        "jp": "研究者たちは鳥類の個体数急減を生息地の喪失によるものだと考えている。",
+        "options": [
+          "attribute",
+          "contribute",
+          "distribute",
+          "substitute"
+        ],
+        "answer": "attribute",
+        "note": "attribute A to B（AをBのせいにする・AはBに起因すると考える）。語法4択の王道。"
+      },
+      {
+        "tag": "大学受験・論理接続詞",
+        "sentence": "[ ___ ] the high cost, the new solar project proved economically viable.",
+        "jp": "高コストにもかかわらず、その新しい太陽光プロジェクトは経済的に実行可能だと証明された。",
+        "options": [
+          "Notwithstanding",
+          "Provided",
+          "Whereas",
+          "Consequently"
+        ],
+        "answer": "Notwithstanding",
+        "note": "Notwithstanding + 名詞（〜にもかかわらず ＝ Despite / In spite of）。難関大の長文で頻出。"
+      },
+      {
+        "tag": "大学受験・重要名詞",
+        "sentence": "There is a growing [ ___ ] among scientists that climate action cannot wait.",
+        "jp": "気候変動対策は待ったなしであるという見解の一致が科学者の間で広がっている。",
+        "options": [
+          "consensus",
+          "controversy",
+          "obstacle",
+          "prejudice"
+        ],
+        "answer": "consensus",
+        "note": "consensus（合意・見解の一致）。controversy（論争）との対比で論説文に必ず登場する。"
+      },
+      {
+        "tag": "大学受験・重要動詞",
+        "sentence": "Artificial intelligence has [ ___ ] the way medical images are analyzed.",
+        "jp": "人工知能は医療画像の解析方法に革命をもたらした。",
+        "options": [
+          "revolutionized",
+          "deteriorated",
+          "neglected",
+          "postponed"
+        ],
+        "answer": "revolutionized",
+        "note": "revolutionize（〜に革命を起こす・抜本的に変える）。テクノロジー系長文の頻出動詞。"
+      },
+      {
+        "tag": "大学受験・句動詞",
+        "sentence": "We must [ ___ ] the long-term consequences before adopting this policy.",
+        "jp": "この政策を採用する前に長期的な結果を考慮に入れなければならない。",
+        "options": [
+          "account for",
+          "give in to",
+          "look down on",
+          "do away with"
+        ],
+        "answer": "account for",
+        "note": "account for 〜（〜を説明する／〜の割合を占める／〜を考慮に入れる）。多義語として最重要。"
+      },
+      {
+        "tag": "大学受験・形容詞",
+        "sentence": "The instructions were so [ ___ ] that nobody knew what to do next.",
+        "jp": "指示があまりに曖昧だったので、次に何をすべきか誰もわからなかった。",
+        "options": [
+          "ambiguous",
+          "explicit",
+          "coherent",
+          "inevitable"
+        ],
+        "answer": "ambiguous",
+        "note": "ambiguous（曖昧な・多義に解釈できる）。explicit（明確な）との対比で覚える。"
+      },
+      {
+        "tag": "大学受験・動詞 (deprive)",
+        "sentence": "The severe drought [ ___ ] the farmers of their livelihood.",
+        "jp": "深刻な干ばつが農家から生計の手段を奪った。",
+        "options": [
+          "deprived",
+          "supplied",
+          "reminded",
+          "informed"
+        ],
+        "answer": "deprived",
+        "note": "deprive A of B（AからBを奪う）。rob A of B と同じ「奪う＋of」の構文。"
+      },
+      {
+        "tag": "大学受験・副詞",
+        "sentence": "The new law will [ ___ ] affect small businesses across the country.",
+        "jp": "新しい法律は全国の小規模事業者に必然的に影響を与えるだろう。",
+        "options": [
+          "inevitably",
+          "barely",
+          "seldom",
+          "merely"
+        ],
+        "answer": "inevitably",
+        "note": "inevitably（必然的に・避けられず）。論説文の結論部分で頻出する重要副詞。"
+      }
+    ],
+    "dictation": [
+      {
+        "tag": "大学受験・重要動詞",
+        "sentence": "Sustainable growth requires balancing economic and environmental goals.",
+        "blankWord": "requires",
+        "masked": "Sustainable growth [ ________ ] balancing economic and environmental goals.",
+        "jp": "持続可能な成長には、経済と環境の目標のバランスを取ることが求められる。",
+        "note": "require + doing（〜することを必要とする）。三単現の s の聴き取りにも注意。"
+      },
+      {
+        "tag": "大学受験・論理接続",
+        "sentence": "Despite the initial setback, the research team achieved remarkable results.",
+        "blankWord": "remarkable",
+        "masked": "Despite the initial setback, the research team achieved [ __________ ] results.",
+        "jp": "当初の挫折にもかかわらず、研究チームは目覚ましい成果を上げた。",
+        "note": "Despite + 名詞句（〜にもかかわらず）。逆接の後ろに筆者の主張・成果が来る。"
+      },
+      {
+        "tag": "大学受験・アカデミック語彙",
+        "sentence": "Empirical evidence strongly supports the hypothesis proposed by the author.",
+        "blankWord": "hypothesis",
+        "masked": "Empirical evidence strongly supports the [ __________ ] proposed by the author.",
+        "jp": "実証的な証拠は、著者が提唱した仮説を強く支持している。",
+        "note": "empirical（経験的・実証的な）と hypothesis（仮説）は評論文の頻出ペア。"
+      },
+      {
+        "tag": "大学受験・相関関係",
+        "sentence": "Correlation does not necessarily imply causation in statistical analysis.",
+        "blankWord": "causation",
+        "masked": "Correlation does not necessarily imply [ _________ ] in statistical analysis.",
+        "jp": "統計分析において、相関関係は必ずしも因果関係を意味しない。",
+        "note": "共通テスト・二次試験の科学エッセイで定番の命題。correlation と causation。"
+      },
+      {
+        "tag": "大学受験・環境/エネルギー",
+        "sentence": "Transitioning to renewable energy demands substantial infrastructure investment.",
+        "blankWord": "substantial",
+        "masked": "Transitioning to renewable energy demands [ ___________ ] infrastructure investment.",
+        "jp": "再生可能エネルギーへの移行には、多大なインフラ投資が必要とされる。",
+        "note": "substantial（かなりの・実質的な）。"
+      },
+      {
+        "tag": "大学受験・認知科学",
+        "sentence": "Multitasking often diminishes overall productivity rather than improving it.",
+        "blankWord": "diminishes",
+        "masked": "Multitasking often [ __________ ] overall productivity rather than improving it.",
+        "jp": "マルチタスクは生産性を高めるどころか、全体として低下させることが多い。",
+        "note": "diminish（減少させる・低下させる）。rather than の対比構造に注目。"
+      },
+      {
+        "tag": "大学受験・歴史/社会",
+        "sentence": "Technological innovations have profoundly transformed human communication.",
+        "blankWord": "profoundly",
+        "masked": "Technological innovations have [ __________ ] transformed human communication.",
+        "jp": "技術革新は人間のコミュニケーションを根本的に変容させた。",
+        "note": "profoundly（深く・根本的に）。"
+      },
+      {
+        "tag": "大学受験・経済/政策",
+        "sentence": "Governments must implement transparent policies to maintain public trust.",
+        "blankWord": "transparent",
+        "masked": "Governments must implement [ ___________ ] policies to maintain public trust.",
+        "jp": "政府は国民の信頼を維持するために透明性の高い政策を実施しなければならない。",
+        "note": "transparent（透明な・明快な）。"
+      }
+    ],
+    "passages": [
+      {
+        "title": "記憶の定着と「分散学習（Spacing Effect）」（共通テスト・二次）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Research in cognitive psychology",
+                "role": "S",
+                "jp": "認知心理学の研究は"
+              },
+              {
+                "text": "demonstrates",
+                "role": "V",
+                "jp": "実証している"
+              },
+              {
+                "text": "that spaced repetition",
+                "role": "O",
+                "jp": "間隔を空けた反復が"
+              },
+              {
+                "text": "outperforms",
+                "role": "V",
+                "jp": "〜を上回ることを"
+              },
+              {
+                "text": "cramming.",
+                "role": "O",
+                "jp": "一夜漬けを"
+              }
+            ]
+          },
+          {
+            "chunks": [
+              {
+                "text": "When learners",
+                "role": "M",
+                "jp": "学習者が〜するとき"
+              },
+              {
+                "text": "retrieve information",
+                "role": "O",
+                "jp": "情報を思い出す"
+              },
+              {
+                "text": "just before forgetting it,",
+                "role": "M",
+                "jp": "忘れる直前に"
+              },
+              {
+                "text": "neural pathways",
+                "role": "S",
+                "jp": "神経回路は"
+              },
+              {
+                "text": "become significantly stronger.",
+                "role": "C",
+                "jp": "著しく強固になる"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "本文の内容と一致するものはどれか？",
+          "options": [
+            "一夜漬けは長期記憶に最も有効である",
+            "忘れる直前に思い出すことで記憶が強固になる",
+            "反復学習は心理学では推奨されていない"
+          ],
+          "answer": "忘れる直前に思い出すことで記憶が強固になる"
+        }
+      },
+      {
+        "title": "アルゴリズムと人間の判断力（難関私大・国公立レベル）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Although automated algorithms",
+                "role": "M",
+                "jp": "自動化されたアルゴリズムは〜だが"
+              },
+              {
+                "text": "process vast datasets",
+                "role": "O",
+                "jp": "膨大なデータを処理する"
+              },
+              {
+                "text": "with unmatched speed,",
+                "role": "M",
+                "jp": "比類ない速度で"
+              },
+              {
+                "text": "they",
+                "role": "S",
+                "jp": "それらは"
+              },
+              {
+                "text": "often lack",
+                "role": "V",
+                "jp": "しばしば欠いている"
+              },
+              {
+                "text": "ethical judgment.",
+                "role": "O",
+                "jp": "倫理的判断を"
+              }
+            ]
+          },
+          {
+            "chunks": [
+              {
+                "text": "Consequently,",
+                "role": "M",
+                "jp": "その結果"
+              },
+              {
+                "text": "human oversight",
+                "role": "S",
+                "jp": "人間による監視が"
+              },
+              {
+                "text": "remains indispensable",
+                "role": "C",
+                "jp": "依然として不可欠である"
+              },
+              {
+                "text": "in critical decisions.",
+                "role": "M",
+                "jp": "重要な意思決定においては"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "アルゴリズムに対して人間が担うべき役割として述べられているのは？",
+          "options": [
+            "データ処理速度のさらなる向上",
+            "重要な意思決定における監視",
+            "すべての倫理規則の自動化"
+          ],
+          "answer": "重要な意思決定における監視"
+        }
+      },
+      {
+        "title": "「選択のパラドックス」と満足度（大学入試頻出テーマ）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Having too many options",
+                "role": "S",
+                "jp": "選択肢が多すぎることは"
+              },
+              {
+                "text": "paradoxically reduces",
+                "role": "V",
+                "jp": "逆説的に低下させる"
+              },
+              {
+                "text": "our satisfaction",
+                "role": "O",
+                "jp": "私たちの満足度を"
+              },
+              {
+                "text": "after making a choice.",
+                "role": "M",
+                "jp": "選択を行った後の"
+              }
+            ]
+          },
+          {
+            "chunks": [
+              {
+                "text": "This occurs",
+                "role": "S",
+                "jp": "これは生じる（S+V）"
+              },
+              {
+                "text": "because we constantly wonder",
+                "role": "M",
+                "jp": "私たちが絶えず考えるから"
+              },
+              {
+                "text": "whether another option",
+                "role": "S",
+                "jp": "別の選択肢の方が"
+              },
+              {
+                "text": "would have been better.",
+                "role": "C",
+                "jp": "より良かったのではないかと"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "選択肢が多すぎると満足度が下がる理由は何か？",
+          "options": [
+            "選択自体に時間がかかりすぎるから",
+            "他の選択肢の方が良かったのではと考え続けるから",
+            "選択肢の質が必ず低いから"
+          ],
+          "answer": "他の選択肢の方が良かったのではと考え続けるから"
+        }
+      }
+    ]
+  },
+  "eiken": {
+    "name": "英検2級・準1級",
+    "syntax": [
+      {
+        "tag": "英検準1級・強調構文",
+        "jp": "私たちが重視すべきなのは、量ではなく質である。",
+        "chunks": [
+          "It is",
+          "quality,",
+          "not quantity,",
+          "that",
+          "we should",
+          "focus on."
+        ],
+        "note": "「It is A that ~」の強調構文。英検ライティング・スピーキングでも説得力を高める強力な武器。"
+      },
+      {
+        "tag": "英検2級・動名詞の意味上の主語",
+        "jp": "彼女がその会議に出席することに私は反対しない。",
+        "chunks": [
+          "I do not",
+          "object to",
+          "her",
+          "attending",
+          "the meeting."
+        ],
+        "note": "object to + 所有格 + doing（〜が…することに反対する）。to は前置詞なので動名詞が続く。"
+      },
+      {
+        "tag": "英検準1級・比較構文 (no less ... than)",
+        "jp": "環境保護は経済成長に劣らず重要である。",
+        "chunks": [
+          "Environmental protection",
+          "is",
+          "no less important",
+          "than",
+          "economic growth."
+        ],
+        "note": "no less A than B（Bに劣らずAだ）。英検エッセイの本論で対比を述べる際に非常に便利。"
+      },
+      {
+        "tag": "英検2級・使役動詞 (have / make)",
+        "jp": "インターネットによって人々は情報を瞬時に共有できるようになった。",
+        "chunks": [
+          "The internet",
+          "has made it",
+          "possible",
+          "for people",
+          "to share",
+          "information instantly."
+        ],
+        "note": "make it possible for 人 to do（人が〜することを可能にする）。社会問題エッセイの鉄板フレーズ。"
+      },
+      {
+        "tag": "英検準1級・仮定法倒置 (Were it not for)",
+        "jp": "もしボランティアの支援がなければ、そのイベントは成功しなかっただろう。",
+        "chunks": [
+          "Were it not for",
+          "the volunteers' support,",
+          "the event",
+          "would not",
+          "succeed."
+        ],
+        "note": "If it were not for ~ の If を省略した倒置形。準1級の文法・読解でよく登場する。"
+      },
+      {
+        "tag": "英検2級・not only A but also B",
+        "jp": "再生可能エネルギーは汚染を減らすだけでなく、雇用も生み出す。",
+        "chunks": [
+          "Renewable energy",
+          "not only",
+          "reduces pollution",
+          "but also",
+          "creates",
+          "new jobs."
+        ],
+        "note": "利点を2つ並べる際に最適な構文。動詞の数を主語に合わせる点もチェック。"
+      },
+      {
+        "tag": "英検準1級・such ... that 構文",
+        "jp": "少子化の影響は非常に深刻なので、即時の対策が求められている。",
+        "chunks": [
+          "The impact",
+          "of declining birthrates",
+          "is",
+          "such that",
+          "immediate action",
+          "is required."
+        ],
+        "note": "such that ~（非常に〜なので…だ）。因果関係を強調する高度な表現。"
+      },
+      {
+        "tag": "英検2級・結果の不定詞 (only to)",
+        "jp": "彼は駅へ急いで走ったが、結局終電を逃してしまった。",
+        "chunks": [
+          "He ran",
+          "to the station",
+          "only to",
+          "miss",
+          "the last train."
+        ],
+        "note": "only to 動詞の原形（〜したが結局…した）。物語文・リスニングで登場する重要表現。"
+      },
+      {
+        "tag": "英検準1級・分詞の独立構造",
+        "jp": "すべての条件を考慮すると、その計画は極めて現実的だ。",
+        "chunks": [
+          "All things",
+          "considered,",
+          "the plan",
+          "is",
+          "remarkably",
+          "practical."
+        ],
+        "note": "All things considered（すべての点を考慮すると）。独立分詞構文の慣用表現としてそのまま覚えよう。"
+      },
+      {
+        "tag": "英検2級・be likely to do",
+        "jp": "リモートワークは今後も普及し続ける可能性が高い。",
+        "chunks": [
+          "Remote work",
+          "is likely",
+          "to continue",
+          "spreading",
+          "in the future."
+        ],
+        "note": "be likely to do（〜する可能性が高い）。予測を述べる英検2級面接・エッセイの必須表現。"
+      }
+    ],
+    "vocab": [
+      {
+        "tag": "英検準1級・大問1対策",
+        "sentence": "The new regulations were introduced to [ ___ ] the risk of data breaches.",
+        "jp": "データ漏洩のリスクを軽減するために新しい規制が導入された。",
+        "options": [
+          "mitigate",
+          "aggravate",
+          "fluctuate",
+          "proliferate"
+        ],
+        "answer": "mitigate",
+        "note": "mitigate（リスクや被害を軽減する・和らげる）は準1級大問1の超頻出語彙。aggravate（悪化させる）の反対。"
+      },
+      {
+        "tag": "英検2級・句動詞",
+        "sentence": "We need to [ ___ ] a practical solution before the deadline.",
+        "jp": "締め切り前に現実的な解決策を考え出す必要がある。",
+        "options": [
+          "come up with",
+          "put up with",
+          "run out of",
+          "look down on"
+        ],
+        "answer": "come up with",
+        "note": "come up with（アイデア・解決策を思いつく）。put up with（我慢する）との対比でよく出題される。"
+      },
+      {
+        "tag": "英検準1級・大問1対策",
+        "sentence": "The company's rapid expansion proved [ ___ ] to its long-term stability.",
+        "jp": "その企業の急速な拡大は、長期的な安定にとって有害であることが判明した。",
+        "options": [
+          "detrimental",
+          "lucrative",
+          "compliant",
+          "versatile"
+        ],
+        "answer": "detrimental",
+        "note": "detrimental to 〜（〜にとって有害な）。lucrative（儲かる）とセットでビジネス文脈に頻出。"
+      },
+      {
+        "tag": "英検2級・重要動詞",
+        "sentence": "Parents should [ ___ ] their children to read books from an early age.",
+        "jp": "親は幼い頃から子どもに読書をするよう奨励すべきだ。",
+        "options": [
+          "encourage",
+          "prohibit",
+          "hesitate",
+          "abandon"
+        ],
+        "answer": "encourage",
+        "note": "encourage O to do（Oに〜するよう促す・励ます）。教育トピックのエッセイでもそのまま使える。"
+      },
+      {
+        "tag": "英検準1級・大問1対策",
+        "sentence": "Due to budget cuts, the museum had to [ ___ ] several planned exhibitions.",
+        "jp": "予算削減のため、その美術館は予定していた展示のいくつかを中止せざるを得なかった。",
+        "options": [
+          "scrap",
+          "endorse",
+          "foster",
+          "reconcile"
+        ],
+        "answer": "scrap",
+        "note": "scrap（計画などを廃棄する・取りやめる）。ニュース英語や準1級の大問1でよく狙われる動詞。"
+      },
+      {
+        "tag": "英検2級・形容詞",
+        "sentence": "It is [ ___ ] for drivers to obey traffic rules at all times.",
+        "jp": "運転手が常に交通ルールを守ることは不可欠である。",
+        "options": [
+          "essential",
+          "optional",
+          "fragile",
+          "temporary"
+        ],
+        "answer": "essential",
+        "note": "essential（不可欠な・極めて重要な）。necessary の言い換えとしてライティングでも重宝。"
+      },
+      {
+        "tag": "英検準1級・句動詞",
+        "sentence": "The negotiation [ ___ ] after both sides refused to compromise.",
+        "jp": "双方が妥協を拒んだため、交渉は決裂した。",
+        "options": [
+          "broke down",
+          "carried out",
+          "turned up",
+          "set aside"
+        ],
+        "answer": "broke down",
+        "note": "break down（交渉などが決裂する／機械が故障する）。carry out（実行する）も頻出。"
+      },
+      {
+        "tag": "英検準1級・大問1対策",
+        "sentence": "The speaker gave a [ ___ ] summary of the complex economic issue.",
+        "jp": "講演者はその複雑な経済問題について簡潔明瞭な要約を行った。",
+        "options": [
+          "lucid",
+          "tedious",
+          "obsolete",
+          "hostile"
+        ],
+        "answer": "lucid",
+        "note": "lucid（明快な・わかりやすい）。tedious（退屈な）や obsolete（時代遅れの）も準1級必須単語。"
+      },
+      {
+        "tag": "英検2級・重要熟語",
+        "sentence": "Many young people are [ ___ ] of the environmental impact of fast fashion.",
+        "jp": "多くの若者がファストファッションの環境への影響に気づいている。",
+        "options": [
+          "aware",
+          "capable",
+          "fond",
+          "proud"
+        ],
+        "answer": "aware",
+        "note": "be aware of 〜（〜に気づいている・認識している）。社会問題長文の基本表現。"
+      },
+      {
+        "tag": "英検準1級・大問1対策",
+        "sentence": "The new policy aims to [ ___ ] innovation in renewable energy.",
+        "jp": "新政策は再生可能エネルギー分野のイノベーションを促進することを目的としている。",
+        "options": [
+          "spur",
+          "curb",
+          "evade",
+          "impede"
+        ],
+        "answer": "spur",
+        "note": "spur（刺激する・促進する）。curb（抑制する）や impede（妨げる）と反意語で整理しよう。"
+      },
+      {
+        "tag": "英検2級・副詞",
+        "sentence": "Technology has [ ___ ] changed the way people work and communicate.",
+        "jp": "テクノロジーは人々の働き方やコミュニケーションの方法を劇的に変えた。",
+        "options": [
+          "dramatically",
+          "scarcely",
+          "narrowly",
+          "reluctantly"
+        ],
+        "answer": "dramatically",
+        "note": "dramatically（劇的に・大きく）。変化を述べる際の定番副詞。"
+      },
+      {
+        "tag": "英検準1級・大問1対策",
+        "sentence": "The athlete showed remarkable [ ___ ] in recovering from a serious injury.",
+        "jp": "その選手は大怪我から回復する過程で目覚ましい回復力（打たれ強さ）を見せた。",
+        "options": [
+          "resilience",
+          "complacency",
+          "apathy",
+          "turmoil"
+        ],
+        "answer": "resilience",
+        "note": "resilience（回復力・弾力性・逆境に負けない強さ）。近年の英検・入試で最も頻出する概念語。"
+      }
+    ],
+    "dictation": [
+      {
+        "tag": "英検準1級・環境トピック",
+        "sentence": "Urbanization has led to significant shifts in local biodiversity.",
+        "blankWord": "biodiversity",
+        "masked": "Urbanization has led to significant shifts in local [ ____________ ].",
+        "jp": "都市化は地域の生物多様性に大きな変化をもたらした。",
+        "note": "biodiversity（生物多様性）は英検2級・準1級の環境分野で頻出のキーワード。"
+      },
+      {
+        "tag": "英検2級・教育トピック",
+        "sentence": "Interactive software helps students retain vocabulary more effectively.",
+        "blankWord": "vocabulary",
+        "masked": "Interactive software helps students retain [ __________ ] more effectively.",
+        "jp": "双方向ソフトウェアは生徒が語彙をより効果的に記憶するのを助ける。",
+        "note": "retain（保持する・記憶にとどめる）もあわせて押さえよう。"
+      },
+      {
+        "tag": "英検準1級・社会問題",
+        "sentence": "Demographic aging poses unprecedented challenges to healthcare systems.",
+        "blankWord": "unprecedented",
+        "masked": "Demographic aging poses [ _____________ ] challenges to healthcare systems.",
+        "jp": "人口の高齢化は医療制度にかつてない課題をもたらしている。",
+        "note": "unprecedented（前例のない・空前の）。英語ニュースや準1級リスニングで超頻出。"
+      },
+      {
+        "tag": "英検2級・健康",
+        "sentence": "Regular exercise reduces stress and strengthens the immune system.",
+        "blankWord": "immune",
+        "masked": "Regular exercise reduces stress and strengthens the [ ______ ] system.",
+        "jp": "定期的な運動はストレスを減らし、免疫システムを強化する。",
+        "note": "immune system（免疫系）。健康・医療分野の基本語彙。"
+      },
+      {
+        "tag": "英検準1級・テクノロジー",
+        "sentence": "Strict cybersecurity measures are vital to protect sensitive consumer data.",
+        "blankWord": "sensitive",
+        "masked": "Strict cybersecurity measures are vital to protect [ _________ ] consumer data.",
+        "jp": "機密性の高い消費者データを保護するには厳格なサイバーセキュリティ対策が不可欠だ。",
+        "note": "sensitive data（機密情報・個人情報）。"
+      },
+      {
+        "tag": "英検2級・経済",
+        "sentence": "Local businesses benefit greatly from increased tourism in the region.",
+        "blankWord": "tourism",
+        "masked": "Local businesses benefit greatly from increased [ _______ ] in the region.",
+        "jp": "地域の企業は観光業の増加から大きな恩恵を受けている。",
+        "note": "benefit from 〜（〜から恩恵を受ける）。"
+      },
+      {
+        "tag": "英検準1級・科学",
+        "sentence": "Researchers discovered a crucial link between gut bacteria and mental health.",
+        "blankWord": "crucial",
+        "masked": "Researchers discovered a [ _______ ] link between gut bacteria and mental health.",
+        "jp": "研究者たちは腸内細菌とメンタルヘルスの間の重要な関連性を発見した。",
+        "note": "crucial（極めて重要な）。"
+      },
+      {
+        "tag": "英検2級・環境",
+        "sentence": "Reducing plastic waste requires cooperation between consumers and corporations.",
+        "blankWord": "cooperation",
+        "masked": "Reducing plastic waste requires [ ___________ ] between consumers and corporations.",
+        "jp": "プラスチック廃棄物の削減には消費者と企業の協力が必要だ。",
+        "note": "cooperation（協力）と corporation（企業）の音の聞き分けに注意！"
+      }
+    ],
+    "passages": [
+      {
+        "title": "都市のヒートアイランド現象と緑化政策（英検2級〜準1級）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Expanding green spaces",
+                "role": "S",
+                "jp": "緑地を拡大することは"
+              },
+              {
+                "text": "not only",
+                "role": "M",
+                "jp": "〜だけでなく"
+              },
+              {
+                "text": "lowers",
+                "role": "V",
+                "jp": "下げる"
+              },
+              {
+                "text": "summer temperatures",
+                "role": "O",
+                "jp": "夏の気温を"
+              },
+              {
+                "text": "but also improves mental well-being.",
+                "role": "M",
+                "jp": "精神的な幸福感も向上させる"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "都市の緑地拡大がもたらす効果として述べられているのは？",
+          "options": [
+            "気温低下と精神的健康の改善",
+            "交通渋滞の完全な解消",
+            "建物の建設コスト削減"
+          ],
+          "answer": "気温低下と精神的健康の改善"
+        }
+      },
+      {
+        "title": "共有経済（シェアリングエコノミー）の台頭（英検2級〜準1級）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "The rise of sharing platforms",
+                "role": "S",
+                "jp": "共有プラットフォームの台頭は"
+              },
+              {
+                "text": "has shifted",
+                "role": "V",
+                "jp": "変化させた"
+              },
+              {
+                "text": "consumer preference",
+                "role": "O",
+                "jp": "消費者の好みを"
+              },
+              {
+                "text": "from ownership to temporary access.",
+                "role": "M",
+                "jp": "所有から一時的な利用へと"
+              }
+            ]
+          },
+          {
+            "chunks": [
+              {
+                "text": "This trend",
+                "role": "S",
+                "jp": "この傾向は"
+              },
+              {
+                "text": "reduces waste",
+                "role": "V",
+                "jp": "廃棄物を減らす"
+              },
+              {
+                "text": "while offering flexible income",
+                "role": "M",
+                "jp": "柔軟な収入を提供しながら"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "消費者の好みがどのように変化したと述べられているか？",
+          "options": [
+            "一時的な利用から完全な所有へ",
+            "所有から一時的な利用へ",
+            "オンライン購入から店舗購入へ"
+          ],
+          "answer": "所有から一時的な利用へ"
+        }
+      },
+      {
+        "title": "言語学習における「インプット仮説」（英検準1級レベル）",
+        "sentences": [
+          {
+            "chunks": [
+              {
+                "text": "Language acquisition occurs",
+                "role": "S",
+                "jp": "言語習得は起こる（S+V）"
+              },
+              {
+                "text": "most naturally",
+                "role": "M",
+                "jp": "最も自然に"
+              },
+              {
+                "text": "when learners encounter material",
+                "role": "M",
+                "jp": "学習者が教材に出会うとき"
+              },
+              {
+                "text": "that is slightly above their current level.",
+                "role": "M",
+                "jp": "現在のレベルよりわずかに上の"
+              }
+            ]
+          }
+        ],
+        "quiz": {
+          "q": "言語習得が最も自然に起こるのはどのような教材に触れたときか？",
+          "options": [
+            "現在のレベルよりはるかに簡単な教材",
+            "現在のレベルよりわずかに上の教材",
+            "母語のみで書かれた文法書"
+          ],
+          "answer": "現在のレベルよりわずかに上の教材"
+        }
+      }
+    ]
+  }
+};
+
+    // =========================================================================
+    // 2. WEB AUDIO API & SPEECH SYNTHESIS
+    // =========================================================================
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function playTone(type) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (Ctx) audioCtx = new Ctx();
+        }
+        if (!audioCtx) return;
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        if (type === "tap") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(523.25, now);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.09);
+        } else if (type === "success") {
+          [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = "triangle";
+            o.frequency.setValueAtTime(freq, now + i * 0.06);
+            g.gain.setValueAtTime(0.1, now + i * 0.06);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.22);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(now + i * 0.06); o.stop(now + i * 0.06 + 0.24);
+          });
+        } else {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(160, now);
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.15);
+        }
+      } catch (e) {}
+    }
+
+    function speakEnglish(text) {
+      try {
+        if (!("speechSynthesis" in window)) {
+          showToast("このブラウザでは音声読み上げが利用できません");
+          return;
+        }
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = "en-US";
+        const rateEl = document.getElementById("speech-rate");
+        utt.rate = rateEl ? parseFloat(rateEl.value) : 1.0;
+        window.speechSynthesis.speak(utt);
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 3. STATE MANAGEMENT & PERSISTENCE
+    // =========================================================================
+    let state = {
+      courseId: "univ",
+      mode: "syntax",
+      qIndex: 0,
+      combo: 0,
+      xp: 0,
+      streak: 1,
+      quests: { syntax: 0, vocab: 0, reading: 0 },
+      srsQueue: [], // { courseId, mode, question }
+      svocOn: true,
+      chunkJpOn: true,
+      passageIdx: 0,
+      selectedChunks: [],
+      availableChunks: [],
+      answered: false,
+      timerSec: 180,
+      timerId: null
+    };
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem("lexiforge_v1");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.xp = parsed.xp || 0;
+          state.streak = parsed.streak || 1;
+          state.srsQueue = Array.isArray(parsed.srsQueue) ? parsed.srsQueue : [];
+          if (parsed.courseId && COURSES[parsed.courseId]) state.courseId = parsed.courseId;
+        }
+      } catch (e) {}
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem("lexiforge_v1", JSON.stringify({
+          xp: state.xp,
+          streak: state.streak,
+          srsQueue: state.srsQueue,
+          courseId: state.courseId
+        }));
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 2500);
+    }
+
+    // =========================================================================
+    // 4. UI RENDERING
+    // =========================================================================
+    function updateHeaderAndQuests() {
+      document.getElementById("course-badge").textContent = COURSES[state.courseId].name;
+      document.getElementById("xp-val").textContent = `${state.xp} XP`;
+      document.getElementById("streak-val").textContent = `${state.streak}日連続`;
+      document.getElementById("srs-badge").textContent = state.srsQueue.length;
+
+      document.querySelectorAll(".course-btn").forEach(btn => {
+        if (btn.dataset.course === state.courseId) {
+          btn.className = "course-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-sky-400 bg-sky-500/20 text-sky-200 shadow-sm transition";
+        } else {
+          btn.className = "course-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-slate-700 bg-slate-800/70 text-slate-200 hover:border-sky-400 transition";
+        }
+      });
+
+      const qItems = [
+        { label: "語順パズル（Syntax）を1問クリア", done: state.quests.syntax >= 1 },
+        { label: "文脈穴埋め・音声を1問クリア", done: state.quests.vocab >= 1 },
+        { label: "SVOC長文クイズに1問正解", done: state.quests.reading >= 1 }
+      ];
+      const doneCount = qItems.filter(q => q.done).length;
+      document.getElementById("quest-progress-label").textContent = `${doneCount} / 3 完了`;
+      document.getElementById("daily-quests-list").innerHTML = qItems.map(q => `
+        <div class="flex items-center justify-between px-3 py-2 rounded-xl ${q.done ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-200' : 'bg-slate-800/70 border border-slate-700/60 text-slate-300'}">
+          <span>${q.label}</span>
+          <span class="font-mono-code font-bold">${q.done ? '✓' : '未'}</span>
+        </div>
+      `).join("");
+    }
+
+    function switchTab(tabId) {
+      ["home", "train", "reading", "srs"].forEach(t => {
+        document.getElementById(`view-${t}`).classList.toggle("hidden", t !== tabId);
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tabId) {
+          btn.className = "nav-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-sky-500 text-slate-950 transition";
+        } else {
+          btn.className = "nav-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition";
+        }
+      });
+      if (tabId === "train") renderTrainingQuestion();
+      if (tabId === "reading") renderReadingView();
+      if (tabId === "srs") renderSrsView();
+    }
+
+    function getActiveList() {
+      const course = COURSES[state.courseId];
+      return course[state.mode] || [];
+    }
+
+    function renderTrainingQuestion() {
+      const list = getActiveList();
+      if (list.length === 0) return;
+      if (state.qIndex >= list.length) state.qIndex = 0;
+
+      const q = list[state.qIndex];
+      state.answered = false;
+
+      document.querySelectorAll(".mode-pill").forEach(btn => {
+        if (btn.dataset.mode === state.mode) {
+          btn.className = "mode-pill px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40";
+        } else {
+          btn.className = "mode-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700";
+        }
+      });
+
+      document.getElementById("q-tag").textContent = `${COURSES[state.courseId].name} | ${q.tag}`;
+      document.getElementById("train-combo").textContent = state.combo;
+      document.getElementById("train-progress").textContent = `${state.qIndex + 1} / ${list.length}`;
+      document.getElementById("q-japanese").textContent = q.jp;
+      document.getElementById("feedback-box").classList.add("hidden");
+
+      const ctxEl = document.getElementById("q-english-context");
+      const zone = document.getElementById("interactive-zone");
+      zone.innerHTML = "";
+
+      if (state.mode === "syntax") {
+        ctxEl.classList.add("hidden");
+        state.selectedChunks = [];
+        state.availableChunks = q.chunks.map((text, id) => ({ id, text }))
+          .sort(() => Math.random() - 0.5);
+        renderSyntaxZone(q);
+      } else if (state.mode === "vocab") {
+        ctxEl.classList.remove("hidden");
+        ctxEl.textContent = q.sentence;
+        const grid = document.createElement("div");
+        grid.className = "grid sm:grid-cols-2 gap-3";
+        q.options.forEach(opt => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "text-left px-4 py-3 rounded-xl bg-slate-800/90 border border-slate-700 hover:border-sky-400 text-sm font-medium transition";
+          btn.textContent = opt;
+          btn.addEventListener("click", () => checkVocabAnswer(opt, q));
+          grid.appendChild(btn);
+        });
+        zone.appendChild(grid);
+      } else if (state.mode === "dictation") {
+        ctxEl.classList.remove("hidden");
+        ctxEl.textContent = q.masked;
+        const wrap = document.createElement("div");
+        wrap.className = "flex flex-wrap gap-2 items-center";
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.id = "dictation-input";
+        inp.placeholder = "聴き取った単語をスペル入力";
+        inp.autocomplete = "off";
+        inp.className = "flex-1 min-w-[200px] bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono-code text-white focus:outline-none focus:border-sky-400";
+        const submitBtn = document.createElement("button");
+        submitBtn.type = "button";
+        submitBtn.className = "px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition";
+        submitBtn.textContent = "解答する";
+        submitBtn.addEventListener("click", () => checkDictationAnswer(inp.value, q));
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") checkDictationAnswer(inp.value, q);
+        });
+        wrap.appendChild(inp);
+        wrap.appendChild(submitBtn);
+        zone.appendChild(wrap);
+      }
+    }
+
+    function renderSyntaxZone(q) {
+      const zone = document.getElementById("interactive-zone");
+      zone.innerHTML = "";
+
+      const answerBox = document.createElement("div");
+      answerBox.className = "min-h-[60px] bg-slate-900/80 border border-slate-700 rounded-2xl p-3 flex flex-wrap gap-2 items-center";
+      if (state.selectedChunks.length === 0) {
+        const ph = document.createElement("span");
+        ph.className = "text-xs text-slate-500";
+        ph.textContent = "下の語順ブロックをタップして英文を組み立ててください";
+        answerBox.appendChild(ph);
+      } else {
+        state.selectedChunks.forEach(item => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "px-3 py-1.5 rounded-xl bg-sky-500/20 border border-sky-400 text-sky-200 text-sm font-medium hover:bg-rose-500/20 hover:border-rose-400 transition";
+          chip.textContent = item.text;
+          chip.addEventListener("click", () => {
+            if (state.answered) return;
+            playTone("tap");
+            state.selectedChunks = state.selectedChunks.filter(x => x.id !== item.id);
+            state.availableChunks.push(item);
+            renderSyntaxZone(q);
+          });
+          answerBox.appendChild(chip);
+        });
+      }
+
+      const poolBox = document.createElement("div");
+      poolBox.className = "flex flex-wrap gap-2 pt-2";
+      state.availableChunks.forEach(item => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-600 text-slate-100 text-sm font-medium hover:border-sky-400 transition";
+        chip.textContent = item.text;
+        chip.addEventListener("click", () => {
+          if (state.answered) return;
+          playTone("tap");
+          state.availableChunks = state.availableChunks.filter(x => x.id !== item.id);
+          state.selectedChunks.push(item);
+          renderSyntaxZone(q);
+        });
+        poolBox.appendChild(chip);
+      });
+
+      const actions = document.createElement("div");
+      actions.className = "flex gap-2 pt-2";
+      const checkBtn = document.createElement("button");
+      checkBtn.type = "button";
+      checkBtn.className = "px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition";
+      checkBtn.textContent = "語順をチェック";
+      checkBtn.addEventListener("click", () => checkSyntaxAnswer(q));
+      actions.appendChild(checkBtn);
+
+      zone.appendChild(answerBox);
+      zone.appendChild(poolBox);
+      zone.appendChild(actions);
+    }
+
+    function showFeedback(isCorrect, correctAnswerText, noteText, qObj) {
+      state.answered = true;
+      const box = document.getElementById("feedback-box");
+      const title = document.getElementById("feedback-title");
+      const detail = document.getElementById("feedback-detail");
+      box.classList.remove("hidden");
+
+      if (isCorrect) {
+        state.combo++;
+        state.xp += 25 + Math.min(state.combo * 5, 25);
+        if (state.mode === "syntax") state.quests.syntax++;
+        else state.quests.vocab++;
+        playTone("success");
+        box.className = "rounded-2xl p-4 sm:p-5 border border-emerald-500/40 bg-emerald-500/10 space-y-2 animate-pop";
+        title.className = "font-bold text-sm text-emerald-300";
+        title.textContent = `正解！ (+25 XP / ${state.combo} コンボ)`;
+      } else {
+        state.combo = 0;
+        playTone("miss");
+        box.className = "rounded-2xl p-4 sm:p-5 border border-rose-500/40 bg-rose-500/10 space-y-2 animate-shake";
+        title.className = "font-bold text-sm text-rose-300";
+        title.textContent = `惜しい！ 正しい表現: ${correctAnswerText}`;
+
+        // Add to SRS weakness queue if not duplicate
+        const exists = state.srsQueue.some(item => item.question.jp === qObj.jp);
+        if (!exists) {
+          state.srsQueue.push({ courseId: state.courseId, mode: state.mode, question: qObj });
+        }
+      }
+
+      detail.textContent = noteText;
+      document.getElementById("train-combo").textContent = state.combo;
+      saveProgress();
+      updateHeaderAndQuests();
+    }
+
+    function checkSyntaxAnswer(q) {
+      if (state.answered) return;
+      if (state.selectedChunks.length === 0) {
+        showToast("ブロックを選んで英文を組み立ててください");
+        return;
+      }
+      const userAns = state.selectedChunks.map(x => x.text).join(" ");
+      const target = q.chunks.join(" ");
+      const ok = userAns === target;
+      showFeedback(ok, target, q.note, q);
+      if (ok) speakEnglish(target);
+    }
+
+    function checkVocabAnswer(opt, q) {
+      if (state.answered) return;
+      const ok = opt === q.answer;
+      const fullSent = q.sentence.replace("[ ___ ]", q.answer);
+      showFeedback(ok, q.answer, q.note, q);
+      if (ok) speakEnglish(fullSent);
+    }
+
+    function checkDictationAnswer(val, q) {
+      if (state.answered) return;
+      const cleaned = val.trim().toLowerCase();
+      if (!cleaned) {
+        showToast("単語を入力してください");
+        return;
+      }
+      const ok = cleaned === q.blankWord.toLowerCase();
+      showFeedback(ok, q.blankWord, q.note, q);
+    }
+
+    // =========================================================================
+    // 5. SVOC CHUNK READER
+    // =========================================================================
+    function renderReadingView() {
+      const course = COURSES[state.courseId];
+      const passages = course.passages || [];
+      if (state.passageIdx >= passages.length) state.passageIdx = 0;
+
+      const sel = document.getElementById("passage-selector");
+      sel.innerHTML = passages.map((p, i) => `
+        <button type="button" data-pidx="${i}" class="p-btn px-3 py-1.5 rounded-xl text-xs font-semibold ${i === state.passageIdx ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40' : 'bg-slate-800 text-slate-300 border border-slate-700'}">${p.title}</button>
+      `).join("");
+
+      sel.querySelectorAll(".p-btn").forEach(b => {
+        b.addEventListener("click", () => {
+          state.passageIdx = Number(b.dataset.pidx);
+          renderReadingView();
+        });
+      });
+
+      const p = passages[state.passageIdx];
+      const body = document.getElementById("passage-body");
+      body.innerHTML = p.sentences.map(sent => {
+        const chunksHtml = sent.chunks.map(c => {
+          const cls = state.svocOn ? `svoc-${c.role}` : "bg-slate-800/60 border-b border-slate-600";
+          const jpSub = state.chunkJpOn ? `<span class="block text-[11px] text-slate-400 mt-1">${c.jp}</span>` : "";
+          return `
+            <span class="inline-block mr-2 mb-2 px-2 py-1 rounded-lg ${cls} transition">
+              <span class="font-medium text-sm sm:text-base">${c.text}</span>
+              ${state.svocOn ? `<span class="ml-1 text-[10px] font-mono-code opacity-75">[${c.role}]</span>` : ""}
+              ${jpSub}
+            </span>`;
+        }).join("");
+        return `<div class="leading-relaxed border-b border-slate-800/70 pb-3 last:border-b-0">${chunksHtml}</div>`;
+      }).join("");
+
+      const quizBox = document.getElementById("passage-quiz");
+      quizBox.innerHTML = `
+        <div class="text-xs font-mono-code text-amber-400">読解チェック</div>
+        <div class="text-sm font-bold text-slate-100">${p.quiz.q}</div>
+        <div class="flex flex-wrap gap-2 pt-1" id="reading-quiz-opts"></div>
+        <div id="reading-quiz-res" class="text-xs font-semibold pt-1"></div>
+      `;
+      const optBox = document.getElementById("reading-quiz-opts");
+      p.quiz.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-sky-400 text-xs sm:text-sm transition";
+        btn.textContent = opt;
+        btn.addEventListener("click", () => {
+          const resEl = document.getElementById("reading-quiz-res");
+          if (opt === p.quiz.answer) {
+            playTone("success");
+            state.xp += 30;
+            state.quests.reading++;
+            resEl.className = "text-xs font-bold text-emerald-400 pt-1";
+            resEl.textContent = "正解！ (+30 XP) 英語の語順のまま意味が取れています。";
+            saveProgress();
+            updateHeaderAndQuests();
+          } else {
+            playTone("miss");
+            resEl.className = "text-xs font-bold text-rose-400 pt-1";
+            resEl.textContent = "不正解です。S（主語）とV（動詞）のまとまりをもう一度確認してみましょう。";
+          }
+        });
+        optBox.appendChild(btn);
+      });
+    }
+
+    // =========================================================================
+    // 6. SRS WEAKNESS REVIEW VIEW
+    // =========================================================================
+    function renderSrsView() {
+      const listEl = document.getElementById("srs-list");
+      if (state.srsQueue.length === 0) {
+        listEl.innerHTML = `<div class="text-sm text-slate-400 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">現在、復習待ちの弱点問題はありません。トレーニングで間違えた問題が自動的にここに蓄積されます。</div>`;
+        return;
+      }
+      listEl.innerHTML = state.srsQueue.map((item, idx) => `
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="text-[11px] font-mono-code text-rose-400">${COURSES[item.courseId].name} | ${item.question.tag}</div>
+            <div class="text-sm font-bold text-slate-100 mt-0.5">${item.question.jp}</div>
+          </div>
+          <button type="button" data-srs-idx="${idx}" class="srs-resolve-btn px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold hover:bg-emerald-500/30 transition">定着済みにする</button>
+        </div>
+      `).join("");
+
+      listEl.querySelectorAll(".srs-resolve-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const i = Number(btn.dataset.srsIdx);
+          state.srsQueue.splice(i, 1);
+          state.xp += 15;
+          playTone("success");
+          saveProgress();
+          updateHeaderAndQuests();
+          renderSrsView();
+          showToast("復習完了！(+15 XP)");
+        });
+      });
+    }
+
+    // =========================================================================
+    // 7. EVENT WIRING
+    // =========================================================================
+    window.addEventListener("load", () => {
+      loadProgress();
+      updateHeaderAndQuests();
+    });
+
+    document.getElementById("tab-home").addEventListener("click", () => switchTab("home"));
+    document.getElementById("tab-train").addEventListener("click", () => switchTab("train"));
+    document.getElementById("tab-reading").addEventListener("click", () => switchTab("reading"));
+    document.getElementById("tab-srs").addEventListener("click", () => switchTab("srs"));
+
+    document.querySelectorAll(".course-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.courseId = btn.dataset.course;
+        state.qIndex = 0;
+        state.passageIdx = 0;
+        saveProgress();
+        updateHeaderAndQuests();
+        showToast(`${COURSES[state.courseId].name}コースに切り替えました`);
+      });
+    });
+
+    document.querySelectorAll(".launch-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const m = card.dataset.launch;
+        if (m === "reading") {
+          switchTab("reading");
+        } else {
+          state.mode = m;
+          state.qIndex = 0;
+          switchTab("train");
+        }
+      });
+    });
+
+    document.querySelectorAll(".mode-pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.mode = btn.dataset.mode;
+        state.qIndex = 0;
+        renderTrainingQuestion();
+      });
+    });
+
+    document.getElementById("btn-next-question").addEventListener("click", () => {
+      state.qIndex++;
+      renderTrainingQuestion();
+    });
+
+    document.getElementById("btn-speak-question").addEventListener("click", () => {
+      const q = getActiveList()[state.qIndex];
+      if (!q) return;
+      const text = state.mode === "syntax" ? q.chunks.join(" ") : (q.sentence ? q.sentence.replace("[ ___ ]", q.answer) : q.jp);
+      speakEnglish(text);
+    });
+
+    document.getElementById("btn-toggle-svoc").addEventListener("click", (e) => {
+      state.svocOn = !state.svocOn;
+      e.target.textContent = state.svocOn ? "SVOC色分け: ON" : "SVOC色分け: OFF";
+      renderReadingView();
+    });
+
+    document.getElementById("btn-toggle-chunk-jp").addEventListener("click", (e) => {
+      state.chunkJpOn = !state.chunkJpOn;
+      e.target.textContent = state.chunkJpOn ? "チャンク訳: ON" : "チャンク訳: OFF";
+      renderReadingView();
+    });
+
+    document.getElementById("btn-speak-passage").addEventListener("click", () => {
+      const p = (COURSES[state.courseId].passages || [])[state.passageIdx];
+      if (!p) return;
+      const fullText = p.sentences.map(s => s.chunks.map(c => c.text).join(" ")).join(" ");
+      speakEnglish(fullText);
+    });
+
+    document.getElementById("btn-sound").addEventListener("click", (e) => {
+      soundEnabled = !soundEnabled;
+      e.target.textContent = soundEnabled ? "音: ON" : "音: OFF";
+      e.target.className = soundEnabled
+        ? "px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900/90 border border-slate-800 text-sky-300 hover:border-sky-500/50 transition"
+        : "px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-900/90 border border-slate-800 text-slate-400 transition";
+    });
+
+    document.getElementById("btn-start-srs-drill").addEventListener("click", () => {
+      if (state.srsQueue.length === 0) {
+        showToast("復習待ちの問題がありません");
+        return;
+      }
+      const item = state.srsQueue[0];
+      state.courseId = item.courseId;
+      state.mode = item.mode;
+      state.qIndex = 0;
+      updateHeaderAndQuests();
+      switchTab("train");
+      showToast("弱点復習モードを開始しました");
+    });
+
+    document.getElementById("btn-clear-srs").addEventListener("click", () => {
+      state.srsQueue = [];
+      saveProgress();
+      updateHeaderAndQuests();
+      renderSrsView();
+      showToast("復習ストックをリセットしました");
+    });
+
+    // Focus Sprint Timer
+    function formatTimer(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
+      return `${m}:${s}`;
+    }
+
+    document.getElementById("btn-timer-toggle").addEventListener("click", (e) => {
+      if (state.timerId) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+        e.target.textContent = "再開";
+      } else {
+        e.target.textContent = "一時停止";
+        state.timerId = setInterval(() => {
+          state.timerSec--;
+          document.getElementById("timer-display").textContent = formatTimer(Math.max(0, state.timerSec));
+          if (state.timerSec <= 0) {
+            clearInterval(state.timerId);
+            state.timerId = null;
+            e.target.textContent = "開始";
+            playTone("success");
+            showToast("3分スプリント完了！お疲れさまでした");
+          }
+        }, 1000);
+      }
+    });
+
+    document.getElementById("btn-timer-reset").addEventListener("click", () => {
+      if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+      state.timerSec = 180;
+      document.getElementById("timer-display").textContent = "03:00";
+      document.getElementById("btn-timer-toggle").textContent = "開始";
+    });
+  </script>
+</body>
+</html>
