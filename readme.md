@@ -6,8 +6,7 @@
 
 ## Live Demo（GitHub Pages）
 
-`https://<あなたのGitHubユーザー名>.github.io/<リポジトリ名>/`  
-*(※GitHub Pagesを有効化した後、上記URLをご自身の環境に書き換えてください)*
+https://jkj7vv2nd7-lang.github.io/lexiforge/ 
 
 ---
 
